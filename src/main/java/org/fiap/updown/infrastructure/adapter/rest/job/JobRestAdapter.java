@@ -6,20 +6,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fiap.updown.application.port.driven.*;
 import org.fiap.updown.domain.CreateJobCommand;
+import org.fiap.updown.domain.exception.FalhaInfraestruturaException;
 import org.fiap.updown.domain.model.Job;
+import org.fiap.updown.infrastructure.adapter.HeaderUtil;
+import org.fiap.updown.infrastructure.adapter.persistence.entity.JobEntity;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.CreateJobRequest;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.JobExistsByIdResponse;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.JobResponse;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.UpdateJobRequest;
 import org.fiap.updown.infrastructure.adapter.rest.job.mapper.JobRestMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
+
+import static org.fiap.updown.util.EntityUtils.getBaseNameFromEntity;
 
 @Slf4j
 @RestController
@@ -35,6 +42,11 @@ public class JobRestAdapter {
 
     private final JobRestMapper mapper;
 
+    @Value("${spring.application.name}")
+    private String applicationName;
+
+    public static final String ENTITY_NAME = getBaseNameFromEntity(JobEntity.class.getName());
+
     // ------------------------------------------------------------------------------------
     // CREATE (multipart/form-data)
     // ------------------------------------------------------------------------------------
@@ -42,42 +54,29 @@ public class JobRestAdapter {
     @Operation(summary = "Cria um Job recebendo um arquivo de vídeo (multipart/form-data)")
     public ResponseEntity<JobResponse> create(
             @RequestPart("payload") @Valid CreateJobRequest request,
-            @RequestPart("video") MultipartFile video) throws Exception {
+            @RequestPart("video") MultipartFile video) {
 
-        // monta command sem acoplar a frameworks no use case
-        CreateJobCommand cmd = new CreateJobCommand(
-                request.userId(),
-                video.getOriginalFilename(),
-                video.getContentType(),
-                video.getInputStream()
-        );
+        try {
+            // monta command sem acoplar a frameworks no use case
+            CreateJobCommand cmd = new CreateJobCommand(
+                    request.userId(),
+                    video.getOriginalFilename(),
+                    video.getContentType(),
+                    video.getInputStream() // Esta linha pode lançar IOException
+            );
 
-        Job created = createUseCase.execute(cmd);
-        JobResponse resp = mapper.toResponse(created);
-        return ResponseEntity.created(URI.create("/api/v1/jobs/" + resp.id())).body(resp);
+            Job created = createUseCase.execute(cmd);
+            JobResponse resp = mapper.toResponse(created);
+            HttpHeaders headers = HeaderUtil.createEntityCreationAlert(applicationName, false, "job", resp.id().toString());
+
+            return ResponseEntity.created(URI.create("/api/v1/jobs/" + resp.id()))
+                    .headers(headers)
+                    .body(resp);
+
+        } catch (IOException e) {
+            throw new FalhaInfraestruturaException("Não foi possível ler o arquivo de vídeo enviado.", e);
+        }
     }
-
-//    @PostMapping(consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-//    public ResponseEntity<JobResponse> createFromOctet(
-//            @RequestParam("userId") UUID userId,
-//            @RequestHeader(value = "X-Filename", required = false) String filename,
-//            @RequestHeader(value = "Content-Type", required = false) String contentType,
-//            InputStream body // stream bruto do request
-//    ) throws Exception {
-//
-//        // Monte o command sem acoplar frameworks
-//        CreateJobCommand cmd = new CreateJobCommand(
-//                userId,
-//                (filename == null || filename.isBlank()) ? "upload.bin" : filename,
-//                (contentType == null || contentType.isBlank()) ? MediaType.APPLICATION_OCTET_STREAM_VALUE : contentType,
-//                body
-//        );
-//
-//        Job created = createUseCase.execute(cmd);
-//        JobResponse resp = mapper.toResponse(created);
-//        return ResponseEntity.created(URI.create("/api/v1/jobs/" + resp.id())).body(resp);
-//    }
-
 
     // ------------------------------------------------------------------------------------
     // READ
@@ -99,7 +98,11 @@ public class JobRestAdapter {
         Job patch = mapper.toDomain(request);
         patch.setId(id);
         Job updated = updateUseCase.execute(patch);
-        return ResponseEntity.ok(mapper.toResponse(updated));
+        HttpHeaders headers = HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, updated.getId().toString());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(mapper.toResponse(updated));
     }
 
     // ------------------------------------------------------------------------------------
@@ -109,7 +112,11 @@ public class JobRestAdapter {
     @Operation(summary = "Remove um Job por id")
     public ResponseEntity<Void> delete(@PathVariable("id") UUID id) {
         deleteUseCase.execute(id); // lança se não achar
-        return ResponseEntity.noContent().build();
+        HttpHeaders headers = HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString());
+
+        return ResponseEntity.noContent()
+                .headers(headers)
+                .build();
     }
 
     // ------------------------------------------------------------------------------------

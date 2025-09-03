@@ -6,14 +6,13 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fiap.updown.application.port.driver.EventPublisher;
+import org.fiap.updown.domain.exception.FalhaInfraestruturaException;
 import org.fiap.updown.domain.model.Job;
-
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
-import java.time.Instant;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -24,7 +23,7 @@ public class SqsEventPublisherAdapter implements EventPublisher {
 
     private final SqsClient sqs;
     private final SqsMessagingProperties props;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     private volatile String queueUrl;
 
@@ -54,7 +53,7 @@ public class SqsEventPublisherAdapter implements EventPublisher {
             String groupId = computeGroupId(saved);
             String dedupId = saved.getId() != null ? saved.getId().toString() : String.valueOf(body.hashCode());
             b.messageGroupId(groupId)
-             .messageDeduplicationId(dedupId);
+                    .messageDeduplicationId(dedupId);
         }
 
         SendMessageResponse resp = sqs.sendMessage(b.build());
@@ -64,12 +63,11 @@ public class SqsEventPublisherAdapter implements EventPublisher {
                 saved.getUser() != null ? saved.getUser().getId() : null);
     }
 
-
     private String serialize(Job payload) {
         try {
             return objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Falha ao serializar payload SQS", e);
+            throw new FalhaInfraestruturaException("Falha ao serializar payload SQS", e);
         }
     }
 
@@ -79,10 +77,10 @@ public class SqsEventPublisherAdapter implements EventPublisher {
         String strategy = Optional.ofNullable(props.getMessageGroupStrategy()).orElse("user");
         return switch (strategy) {
             case "static" -> Optional.ofNullable(props.getStaticMessageGroupId()).orElse("jobs");
-            case "user"   -> (saved.getUser() != null && saved.getUser().getId() != null)
-                                ? "user-" + saved.getUser().getId()
-                                : "jobs";
-            default       -> "jobs";
+            case "user" -> (saved.getUser() != null && saved.getUser().getId() != null)
+                    ? "user-" + saved.getUser().getId()
+                    : "jobs";
+            default -> "jobs";
         };
     }
 
@@ -92,29 +90,44 @@ public class SqsEventPublisherAdapter implements EventPublisher {
     }
 
     private String resolveOrCreateQueue(String queueName, boolean fifo) {
-        // tenta obter a URL
+        // Tenta obter a URL da fila, pois é a operação mais comum e rápida.
         try {
             GetQueueUrlResponse r = sqs.getQueueUrl(GetQueueUrlRequest.builder().queueName(queueName).build());
             return r.queueUrl();
         } catch (QueueDoesNotExistException e) {
+            // Se a fila não existe, verifica se a aplicação deve criá-la.
             if (!props.isCreateQueueIfMissing()) {
-                throw new IllegalStateException("Fila SQS não existe: " + queueName);
+                throw new FalhaInfraestruturaException("Fila SQS não existe: " + queueName, e);
             }
-            // cria com atributos
+
+            // Inicia a construção da requisição para criar uma nova fila.
             CreateQueueRequest.Builder cb = CreateQueueRequest.builder().queueName(queueName);
-            Map<QueueAttributeName, String> attrs = new HashMap<>();
+
+            // Utiliza EnumMap para maior eficiência ao trabalhar com chaves do tipo enum (QueueAttributeName).
+            Map<QueueAttributeName, String> attrs = new EnumMap<>(QueueAttributeName.class);
+
+            // Adiciona atributos específicos para filas FIFO.
             if (fifo) {
                 attrs.put(QueueAttributeName.FIFO_QUEUE, "true");
                 if (props.isContentBasedDeduplication()) {
                     attrs.put(QueueAttributeName.CONTENT_BASED_DEDUPLICATION, "true");
                 }
             }
+
+            // Adiciona o atraso padrão (delay) na entrega de mensagens, se configurado.
             if (props.getDefaultDelaySeconds() != null && props.getDefaultDelaySeconds() > 0) {
                 attrs.put(QueueAttributeName.DELAY_SECONDS, String.valueOf(props.getDefaultDelaySeconds()));
             }
-            if (!attrs.isEmpty()) cb = cb.attributes(attrs);
 
+            // Associa os atributos à requisição de criação, se houver algum.
+            if (!attrs.isEmpty()) {
+                cb.attributes(attrs);
+            }
+
+            // Executa a criação da fila no SQS.
             CreateQueueResponse created = sqs.createQueue(cb.build());
+
+            // Retorna a URL da fila recém-criada.
             return created.queueUrl();
         }
     }

@@ -4,10 +4,12 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fiap.updown.application.port.driver.VideoStorage;
+import org.fiap.updown.domain.exception.FalhaInfraestruturaException;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,25 +34,25 @@ public class VideoStorageS3Adapter implements VideoStorage {
         if (!props.isCreateBucketIfMissing()) return;
         String bucket = props.getBucket();
         try {
-            s3.headBucket(HeadBucketRequest.builder().bucket(bucket).build());
+            s3.headBucket(hb -> hb.bucket(bucket));
             log.info("Bucket S3 já existe: {}", bucket);
         } catch (S3Exception e) {
             log.info("Criando bucket S3: {}", bucket);
-            CreateBucketRequest.Builder cb = CreateBucketRequest.builder().bucket(bucket);
-            if (!"us-east-1".equals(props.getRegion())) {
-                cb = cb.createBucketConfiguration(CreateBucketConfiguration.builder()
-                        .locationConstraint(props.getRegion())
-                        .build());
-            }
-            s3.createBucket(cb.build());
+            s3.createBucket(cb -> {
+                cb.bucket(bucket);
+                if (!"us-east-1".equals(props.getRegion())) {
+                    cb.createBucketConfiguration(config -> config
+                            .locationConstraint(props.getRegion()));
+                }
+            });
         }
     }
 
     /**
-     * @param userId            dono do vídeo (UUID)
-     * @param originalFilename  nome original (pode ser null)
-     * @param contentType       MIME (pode ser null)
-     * @param data              stream de vídeo
+     * @param userId           dono do vídeo (UUID)
+     * @param originalFilename nome original (pode ser null)
+     * @param contentType      MIME (pode ser null)
+     * @param data             stream de vídeo
      * @return caminho lógico, ex.: s3://bucket/input/{userId}/{uuid}.mp4
      */
     @Override
@@ -78,12 +80,18 @@ public class VideoStorageS3Adapter implements VideoStorage {
             return uri;
 
         } catch (IOException e) {
-            throw new RuntimeException("Falha ao salvar vídeo no S3", e);
+            throw new FalhaInfraestruturaException("Falha ao salvar vídeo no S3", e);
         } finally {
             if (tmp != null) {
-                try { Files.deleteIfExists(tmp); } catch (IOException ignore) {}
+                try {
+                    Files.deleteIfExists(tmp);
+                } catch (IOException ignore) {
+                } //NOSONAR
             }
-            try { if (data != null) data.close(); } catch (IOException ignore) {}
+            try {
+                if (data != null) data.close();
+            } catch (IOException ignore) {
+            } //NOSONAR
         }
     }
 

@@ -2,14 +2,12 @@
 package org.fiap.updown.application.usecase;
 
 import lombok.RequiredArgsConstructor;
-
 import org.fiap.updown.application.port.driven.DeleteJobUseCase;
 import org.fiap.updown.application.port.driver.JobPersistencePort;
-import org.springframework.stereotype.Service;
+import org.fiap.updown.domain.exception.RecursoNaoEncontradoException;
 
 import java.util.UUID;
 
-@Service
 @RequiredArgsConstructor
 public class DeleteJobUseCaseImpl implements DeleteJobUseCase {
 
@@ -18,7 +16,7 @@ public class DeleteJobUseCaseImpl implements DeleteJobUseCase {
     @Override
     public void execute(UUID id) {
         if (!jobPort.existsById(id)) {
-            throw new IllegalArgumentException("Job não encontrado: " + id);
+            throw new RecursoNaoEncontradoException("Job não encontrado: " + id);
         }
         jobPort.deleteById(id);
     }

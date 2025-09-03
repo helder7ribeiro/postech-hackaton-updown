@@ -1,6 +1,4 @@
 app:
-  name: UpDown
-
   storage:
     s3:
       bucket: videos

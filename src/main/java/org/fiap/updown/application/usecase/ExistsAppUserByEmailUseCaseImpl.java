@@ -4,9 +4,7 @@ package org.fiap.updown.application.usecase;
 import lombok.RequiredArgsConstructor;
 import org.fiap.updown.application.port.driven.ExistsAppUserByEmailUseCase;
 import org.fiap.updown.application.port.driver.AppUserPersistencePort;
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class ExistsAppUserByEmailUseCaseImpl implements ExistsAppUserByEmailUseCase {
 

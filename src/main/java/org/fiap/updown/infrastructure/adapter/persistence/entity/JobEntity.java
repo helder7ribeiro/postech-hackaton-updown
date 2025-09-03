@@ -6,12 +6,13 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.fiap.updown.domain.model.JobStatus;
-import org.fiap.updown.infrastructure.adapter.persistence.entity.AppUserEntity;
 import org.hibernate.annotations.*;
 import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -48,13 +49,17 @@ public class JobEntity implements Serializable {
             foreignKey = @ForeignKey(name = "fk_job_app_user"))
     private AppUserEntity user;
 
-    /** Ex.: s3://bucket/input/... */
+    /**
+     * Ex.: s3://bucket/input/...
+     */
     @NotNull
     @Size(max = 512)
     @Column(name = "source_object", length = 512, nullable = false)
     private String sourceObject;
 
-    /** Ex.: s3://bucket/output/... */
+    /**
+     * Ex.: s3://bucket/output/...
+     */
     @Size(max = 512)
     @Column(name = "result_object", length = 512)
     private String resultObject;
@@ -68,10 +73,10 @@ public class JobEntity implements Serializable {
     private String errorMsg;
 
     @CreationTimestamp
-    @Column(name = "created_at", columnDefinition = "timestamptz", updatable = false)
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at", columnDefinition = "timestamptz")
+    @Column(name = "updated_at")
     private Instant updatedAt;
 }
