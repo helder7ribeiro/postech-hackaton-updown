@@ -21,11 +21,9 @@ public interface JobRestMapper {
 
     // ---- DTO -> Domínio (UPDATE/PATCH) ----
     @BeanMapping(ignoreByDefault = true, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mappings({
-            @Mapping(target = "status",       source = "status"),
-            @Mapping(target = "resultObject", source = "resultObject"),
-            @Mapping(target = "errorMsg",     source = "errorMsg")
-    })
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "resultObject", source = "resultObject")
+    @Mapping(target = "errorMsg", source = "errorMsg")
     Job toDomain(UpdateJobRequest req);
 
     // ---- Domínio -> DTO (READ) ----

@@ -3,7 +3,6 @@ package org.fiap.updown.infrastructure.adapter.persistence.mapper;
 import org.fiap.updown.domain.model.AppUser;
 import org.fiap.updown.infrastructure.adapter.persistence.entity.AppUserEntity;
 import org.mapstruct.*;
-import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 

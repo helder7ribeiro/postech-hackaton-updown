@@ -3,15 +3,15 @@ package org.fiap.updown.infrastructure.adapter.persistence.mapper;
 import org.fiap.updown.domain.model.Job;
 import org.fiap.updown.infrastructure.adapter.persistence.entity.JobEntity;
 import org.mapstruct.*;
-import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring",
-        uses = { AppUserMapper.class },
+        uses = {AppUserMapper.class},
         unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface JobMapper {
 
     // --------- entidade -> domínio ----------
-    @Mapping(target = "user", source = "user") // usa AppUserMapper.toDomain
+    @Mapping(target = "user", source = "user")
+    // usa AppUserMapper.toDomain
     Job toDomain(JobEntity entity);
 
     // --------- domínio -> entidade ----------

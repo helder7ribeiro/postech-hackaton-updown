@@ -2,15 +2,14 @@
 package org.fiap.updown.application.usecase;
 
 import lombok.RequiredArgsConstructor;
-
 import org.fiap.updown.application.port.driven.UpdateJobUseCase;
 import org.fiap.updown.application.port.driver.JobPersistencePort;
+import org.fiap.updown.domain.exception.DadosInvalidosException;
+import org.fiap.updown.domain.exception.RecursoNaoEncontradoException;
 import org.fiap.updown.domain.model.Job;
-import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-@Service
 @RequiredArgsConstructor
 public class UpdateJobUseCaseImpl implements UpdateJobUseCase {
 
@@ -18,9 +17,13 @@ public class UpdateJobUseCaseImpl implements UpdateJobUseCase {
 
     @Override
     public Job execute(Job toUpdate) {
+        if (toUpdate.getId() == null) {
+            throw new DadosInvalidosException("ID do Job não pode ser nulo.");
+        }
+
         UUID id = toUpdate.getId();
         Job current = jobPort.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Job não encontrado: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Job não encontrado: " + id));
 
         // aplica mudanças permitidas (status/result/error)
         if (toUpdate.getStatus() != null) current.setStatus(toUpdate.getStatus());

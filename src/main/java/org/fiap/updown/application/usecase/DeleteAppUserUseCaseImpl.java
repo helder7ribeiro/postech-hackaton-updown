@@ -4,11 +4,10 @@ package org.fiap.updown.application.usecase;
 import lombok.RequiredArgsConstructor;
 import org.fiap.updown.application.port.driven.DeleteAppUserUseCase;
 import org.fiap.updown.application.port.driver.AppUserPersistencePort;
-import org.springframework.stereotype.Service;
+import org.fiap.updown.domain.exception.RecursoNaoEncontradoException;
 
 import java.util.UUID;
 
-@Service
 @RequiredArgsConstructor
 public class DeleteAppUserUseCaseImpl implements DeleteAppUserUseCase {
 
@@ -17,7 +16,7 @@ public class DeleteAppUserUseCaseImpl implements DeleteAppUserUseCase {
     @Override
     public void execute(UUID id) {
         if (!appUserPort.existsById(id)) {
-            throw new IllegalArgumentException("AppUser não encontrado: " + id);
+            throw new RecursoNaoEncontradoException("AppUser não encontrado: " + id);
         }
         appUserPort.deleteById(id);
     }
