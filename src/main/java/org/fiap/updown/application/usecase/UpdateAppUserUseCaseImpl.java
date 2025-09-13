@@ -21,7 +21,6 @@ public class UpdateAppUserUseCaseImpl implements UpdateAppUserUseCase {
         AppUser current = appUserPort.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("AppUser não encontrado: " + id));
 
-        // se o e-mail mudou, valida unicidade
         if (!current.getEmail().equalsIgnoreCase(toUpdate.getEmail())
                 && appUserPort.existsByEmail(toUpdate.getEmail())) {
             throw new ConflitoDeDadosException("E-mail já cadastrado: " + toUpdate.getEmail());

@@ -21,7 +21,7 @@ import java.util.UUID;
 public class Job {
     private UUID id;
 
-    /** Dono do job (FK para app_user.id) */
+
     @NotNull(message = "Usuário é obrigatório")
     @Valid
     private AppUser user;

@@ -10,13 +10,12 @@ import java.util.UUID;
         unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface AppUserMapper {
 
-    // --------- entidade -> domínio ----------
     AppUser toDomain(AppUserEntity entity);
 
-    // --------- domínio -> entidade ----------
+
     AppUserEntity toEntity(AppUser domain);
 
-    // --------- referência leve para FK (só id) ----------
+
     @Named("appUserRef")
     default AppUserEntity toEntityRef(AppUser domain) {
         if (domain == null || domain.getId() == null) return null;

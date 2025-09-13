@@ -20,6 +20,11 @@ app:
       defaultDelaySeconds: 0
       messageGroupStrategy: user
       staticMessageGroupId: jobs
+  cognito:
+    userPoolId: ${COGNITO_USER_POOL_ID:us-east-1_IjXtmykzZ}
+    clientId: ${COGNITO_CLIENT_ID:27qrpbh2oi5cbbletblkh7b4ub}
+    region: ${COGNITO_REGION:us-east-1}
+    jwkUrl: ${COGNITO_JWK_URL:https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IjXtmykzZ/.well-known/jwks.json}
 
 spring:
   profiles:

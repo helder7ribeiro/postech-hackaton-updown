@@ -1,0 +1,466 @@
+{
+  "info": {
+    "name": "UpDown API - Autenticação Cognito",
+    "description": "Collection para testar a API UpDown com autenticação automática via AWS Cognito",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "cognito_url",
+      "value": "https://o920lqdxf0.execute-api.us-east-1.amazonaws.com",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "created_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "created_job_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Autenticação",
+      "item": [
+        {
+          "name": "Login Cognito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Verificar se o login foi bem-sucedido",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Salvar o token de acesso",
+                  "    pm.collectionVariables.set('auth_token', responseJson.access_token);",
+                  "    pm.collectionVariables.set('user_id', responseJson.user_id);",
+                  "    ",
+                  "    console.log('✅ Login realizado com sucesso!');",
+                  "    console.log('🔑 Token salvo: ' + responseJson.access_token.substring(0, 20) + '...');",
+                  "    console.log('👤 User ID: ' + responseJson.user_id);",
+                  "    ",
+                  "    // Teste para verificar se o token foi salvo",
+                  "    pm.test('Token foi salvo', function () {",
+                  "        pm.expect(pm.collectionVariables.get('auth_token')).to.not.be.undefined;",
+                  "        pm.expect(pm.collectionVariables.get('auth_token')).to.not.be.empty;",
+                  "    });",
+                  "} else {",
+                  "    console.log('❌ Erro no login: ' + pm.response.code);",
+                  "    pm.test('Login deve retornar 200', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin@frames.com\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{cognito_url}}/auth/login",
+              "host": ["{{cognito_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Faz login no AWS Cognito e salva automaticamente o token de acesso"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Usuários (Público)",
+      "item": [
+        {
+          "name": "Criar Usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Verificar se o usuário foi criado com sucesso",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Salvar o ID do usuário criado",
+                  "    pm.collectionVariables.set('created_user_id', responseJson.id);",
+                  "    ",
+                  "    console.log('✅ Usuário criado com ID: ' + responseJson.id);",
+                  "    ",
+                  "    pm.test('Usuário foi criado', function () {",
+                  "        pm.expect(pm.collectionVariables.get('created_user_id')).to.not.be.undefined;",
+                  "    });",
+                  "} else {",
+                  "    console.log('❌ Erro ao criar usuário: ' + pm.response.code);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/app-users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "app-users"]
+            },
+            "description": "Cria um novo usuário e salva automaticamente o ID"
+          }
+        },
+        {
+          "name": "Buscar Usuário por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/app-users/{{created_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "app-users", "{{created_user_id}}"]
+            },
+            "description": "Busca um usuário pelo ID"
+          }
+        },
+        {
+          "name": "Atualizar Usuário",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Silva Atualizado\",\n  \"email\": \"joao.atualizado@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/app-users/{{created_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "app-users", "{{created_user_id}}"]
+            },
+            "description": "Atualiza um usuário existente"
+          }
+        },
+        {
+          "name": "Deletar Usuário",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/app-users/{{created_user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "app-users", "{{created_user_id}}"]
+            },
+            "description": "Deleta um usuário"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎬 Jobs (Protegido)",
+      "item": [
+        {
+          "name": "Criar Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Verificar se o job foi criado com sucesso",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    ",
+                  "    // Salvar o ID do job criado",
+                  "    pm.collectionVariables.set('created_job_id', responseJson.id);",
+                  "    ",
+                  "    console.log('✅ Job criado com ID: ' + responseJson.id);",
+                  "    ",
+                  "    pm.test('Job foi criado', function () {",
+                  "        pm.expect(pm.collectionVariables.get('created_job_id')).to.not.be.undefined;",
+                  "    });",
+                  "} else {",
+                  "    console.log('❌ Erro ao criar job: ' + pm.response.code);",
+                  "    console.log('Resposta: ' + pm.response.text());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "payload",
+                  "value": "{\n  \"userId\": \"{{created_user_id}}\"\n}",
+                  "type": "text"
+                },
+                {
+                  "key": "video",
+                  "type": "file",
+                  "src": "sample/SampleVideo_1280x720_1mb.mp4"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs"]
+            },
+            "description": "Cria um novo job com upload de vídeo e salva automaticamente o ID"
+          }
+        },
+        {
+          "name": "Buscar Job por ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/{{created_job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs", "{{created_job_id}}"]
+            },
+            "description": "Busca um job pelo ID"
+          }
+        },
+        {
+          "name": "Atualizar Job",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PROCESSING\",\n  \"result\": \"Processando vídeo...\",\n  \"error\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/{{created_job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs", "{{created_job_id}}"]
+            },
+            "description": "Atualiza um job existente"
+          }
+        },
+        {
+          "name": "Verificar se Job Existe",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/exists/{{created_job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs", "exists", "{{created_job_id}}"]
+            },
+            "description": "Verifica se um job existe"
+          }
+        },
+        {
+          "name": "Deletar Job",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/{{created_job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs", "{{created_job_id}}"]
+            },
+            "description": "Deleta um job"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔒 Testes de Segurança",
+      "item": [
+        {
+          "name": "Teste sem Token (deve retornar 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs", "123"]
+            },
+            "description": "Testa acesso sem token - deve retornar 401"
+          }
+        },
+        {
+          "name": "Teste com Token Inválido (deve retornar 401)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "token_invalido",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs", "123"]
+            },
+            "description": "Testa acesso com token inválido - deve retornar 401"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌐 Endpoints Públicos",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Verifica se a aplicação está funcionando"
+          }
+        },
+        {
+          "name": "Swagger UI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/swagger",
+              "host": ["{{base_url}}"],
+              "path": ["swagger"]
+            },
+            "description": "Acessa a interface Swagger"
+          }
+        },
+        {
+          "name": "API Docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api-docs",
+              "host": ["{{base_url}}"],
+              "path": ["api-docs"]
+            },
+            "description": "Acessa a documentação da API"
+          }
+        }
+      ]
+    }
+  ]
+}
