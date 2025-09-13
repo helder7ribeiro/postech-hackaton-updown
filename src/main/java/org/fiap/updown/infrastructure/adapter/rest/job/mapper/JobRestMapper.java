@@ -2,7 +2,6 @@ package org.fiap.updown.infrastructure.adapter.rest.job.mapper;
 
 import org.fiap.updown.domain.model.AppUser;
 import org.fiap.updown.domain.model.Job;
-import org.fiap.updown.infrastructure.adapter.rest.job.dto.CreateJobRequest;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.JobResponse;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.JobUserResponse;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.UpdateJobRequest;
@@ -13,11 +12,6 @@ import java.util.UUID;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface JobRestMapper {
 
-    // ---- DTO -> Domínio (CREATE) ----
-    // Mapeia apenas userId -> user; demais campos ficam null e serão definidos no controller.
-    @BeanMapping(ignoreByDefault = true)
-    @Mapping(target = "user", source = "userId", qualifiedByName = "userFromId")
-    Job toDomain(CreateJobRequest req);
 
     // ---- DTO -> Domínio (UPDATE/PATCH) ----
     @BeanMapping(ignoreByDefault = true, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -42,6 +36,6 @@ public interface JobRestMapper {
     @Named("toJobUserResponse")
     default JobUserResponse toJobUserResponse(AppUser user) {
         if (user == null) return null;
-        return new JobUserResponse(user.getId(), user.getEmail());
+        return new JobUserResponse(user.getId(), user.getEmail(), user.getUsername());
     }
 }

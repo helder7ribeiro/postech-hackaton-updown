@@ -50,7 +50,19 @@ public class JobStepDefinitions extends AbstractIntegrationTest {
 
     private AppUserEntity ensureUserExists(String email) {
         return appUserRepository.findByEmailIgnoreCase(email)
-                .orElseGet(() -> appUserRepository.save(AppUserEntity.builder().email(email).build()));
+                .orElseGet(() -> {
+                    String username = email.split("@")[0];
+                    return appUserRepository.save(AppUserEntity.builder()
+                            .email(email)
+                            .username(username)
+                            .build());
+                });
+    }
+
+    private String createMockJwtToken(String username) {
+        // Para testes, vamos criar um token JWT mock simples
+        // Em um ambiente real, você usaria uma biblioteca como jjwt ou nimbus-jose-jwt
+        return "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImNvZ25pdG86dXNlcm5hbWUiOiI" + username + "In0.signature";
     }
 
     @Dado("que o usuário {string} criou um job")
@@ -70,10 +82,13 @@ public class JobStepDefinitions extends AbstractIntegrationTest {
                 .orElseThrow(() -> new IllegalStateException("Usuário " + email + " não encontrado."));
 
         MockMultipartFile videoFile = new MockMultipartFile("video", "video.mp4", MediaType.MULTIPART_FORM_DATA_VALUE, "video".getBytes());
-        String payloadJson = String.format("{\"userId\":\"%s\"}", user.getId());
-        MockMultipartFile payload = new MockMultipartFile("payload", "", MediaType.APPLICATION_JSON_VALUE, payloadJson.getBytes());
+        
+        // Mock JWT token com username do usuário
+        String mockJwtToken = createMockJwtToken(user.getUsername());
 
-        testContext.setResultActions(mockMvc.perform(multipart("/api/v1/jobs").file(videoFile).file(payload)));
+        testContext.setResultActions(mockMvc.perform(multipart("/api/v1/jobs")
+                .file(videoFile)
+                .header("Authorization", "Bearer " + mockJwtToken)));
 
         if (testContext.getResultActions().andReturn().getResponse().getStatus() == 201) {
             String responseBody = testContext.getResultActions().andReturn().getResponse().getContentAsString();
@@ -84,23 +99,36 @@ public class JobStepDefinitions extends AbstractIntegrationTest {
 
     @Quando("um usuário inexistente envia um vídeo para criar um job")
     public void um_usuario_inexistente_envia_um_video_para_criar_um_job() throws Exception {
-        UUID nonExistentUserId = UUID.randomUUID();
         MockMultipartFile videoFile = new MockMultipartFile("video", "video.mp4", MediaType.MULTIPART_FORM_DATA_VALUE, "video".getBytes());
-        String payloadJson = String.format("{\"userId\":\"%s\"}", nonExistentUserId);
-        MockMultipartFile payload = new MockMultipartFile("payload", "", MediaType.APPLICATION_JSON_VALUE, payloadJson.getBytes());
-        testContext.setResultActions(mockMvc.perform(multipart("/api/v1/jobs").file(videoFile).file(payload)));
+        
+        // Mock JWT token com username inexistente
+        String mockJwtToken = createMockJwtToken("usuario_inexistente");
+        
+        testContext.setResultActions(mockMvc.perform(multipart("/api/v1/jobs")
+                .file(videoFile)
+                .header("Authorization", "Bearer " + mockJwtToken)));
     }
 
     @Quando("um usuário envia uma requisição GET para a URL do último job criado")
     public void um_usuario_envia_uma_requisicao_get_para_a_url_do_ultimo_job_criado() throws Exception {
         Assertions.assertNotNull(lastCreatedJob, "Nenhum job foi criado no passo 'Dado' para este cenário.");
-        testContext.setResultActions(mockMvc.perform(get("/api/v1/jobs/" + lastCreatedJob.getId())));
+        
+        // Mock JWT token para GET
+        String mockJwtToken = createMockJwtToken("usuario.job.busca");
+        
+        testContext.setResultActions(mockMvc.perform(get("/api/v1/jobs/" + lastCreatedJob.getId())
+                .header("Authorization", "Bearer " + mockJwtToken)));
     }
 
     @Quando("um usuário envia uma requisição DELETE para a URL do último job criado")
     public void um_usuario_envia_uma_requisicao_delete_para_a_url_do_ultimo_job_criado() throws Exception {
         Assertions.assertNotNull(lastCreatedJob, "Nenhum job foi criado no passo 'Dado' para este cenário.");
-        testContext.setResultActions(mockMvc.perform(delete("/api/v1/jobs/" + lastCreatedJob.getId())));
+        
+        // Mock JWT token para DELETE
+        String mockJwtToken = createMockJwtToken("usuario.job.delete");
+        
+        testContext.setResultActions(mockMvc.perform(delete("/api/v1/jobs/" + lastCreatedJob.getId())
+                .header("Authorization", "Bearer " + mockJwtToken)));
     }
 
     @E("o corpo da resposta deve conter o e-mail do usuário {string}")

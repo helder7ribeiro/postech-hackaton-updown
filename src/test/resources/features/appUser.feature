@@ -10,7 +10,8 @@ Funcionalidade: Gerenciamento de Usuários
     Quando um usuário envia uma requisição POST para "/api/v1/app-users" com o corpo:
     """
     {
-      "email": "novo.usuario@example.com"
+      "email": "novo.usuario@example.com",
+      "username": "novo.usuario"
     }
     """
     Então o status da resposta deve ser 201
@@ -22,7 +23,8 @@ Funcionalidade: Gerenciamento de Usuários
     Quando um usuário envia uma requisição POST para "/api/v1/app-users" com o corpo:
     """
     {
-      "email": "existente@example.com"
+      "email": "existente@example.com",
+      "username": "existente"
     }
     """
     Então o status da resposta deve ser 409
@@ -42,7 +44,8 @@ Funcionalidade: Gerenciamento de Usuários
     Quando um usuário envia uma requisição PUT para a URL do usuário com e-mail "antigo.email@example.com" com o corpo:
     """
     {
-      "email": "novo.email@example.com"
+      "email": "novo.email@example.com",
+      "username": "novo.email"
     }
     """
     Então o status da resposta deve ser 200

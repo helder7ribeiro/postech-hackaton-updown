@@ -26,7 +26,13 @@ public class UpdateAppUserUseCaseImpl implements UpdateAppUserUseCase {
             throw new ConflitoDeDadosException("E-mail já cadastrado: " + toUpdate.getEmail());
         }
 
+        if (!current.getUsername().equalsIgnoreCase(toUpdate.getUsername())
+                && appUserPort.existsByUsername(toUpdate.getUsername())) {
+            throw new ConflitoDeDadosException("Username já cadastrado: " + toUpdate.getUsername());
+        }
+
         current.setEmail(toUpdate.getEmail());
+        current.setUsername(toUpdate.getUsername());
         return appUserPort.save(current);
     }
 }

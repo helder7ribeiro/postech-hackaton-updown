@@ -11,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -27,6 +28,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String JWK_URL = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IjXtmykzZ/.well-known/jwks.json";
     private static final String EXPECTED_CLIENT_ID = "27qrpbh2oi5cbbletblkh7b4ub";
     private static final String EXPECTED_ISSUER = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IjXtmykzZ";
+
+    @Value("${jwt.validation.enabled:true}")
+    private boolean jwtValidationEnabled;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -48,6 +52,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.warn("Token de autorização não encontrado para endpoint protegido: {}", path);
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.getWriter().write("{\"error\":\"Token de autorização necessário\"}");
+                return;
+            }
+
+            // Se a validação JWT estiver desabilitada (para testes), apenas verificar se o token existe
+            if (!jwtValidationEnabled) {
+                log.debug("Validação JWT desabilitada para testes");
+                filterChain.doFilter(request, response);
                 return;
             }
 

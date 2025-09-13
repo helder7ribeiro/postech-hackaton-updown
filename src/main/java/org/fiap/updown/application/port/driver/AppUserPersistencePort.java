@@ -15,9 +15,13 @@ public interface AppUserPersistencePort {
 
     Optional<AppUser> findByEmail(String email);
 
+    Optional<AppUser> findByUsername(String username);
+
     boolean existsById(UUID id);
 
     boolean existsByEmail(String email);
+
+    boolean existsByUsername(String username);
 
     void deleteById(UUID id);
 

@@ -1,6 +1,6 @@
 package org.fiap.updown.application.usecase;
 
-import org.fiap.updown.application.port.driver.AppUserPersistencePort;
+import org.fiap.updown.application.port.driven.GetAppUserByUsernameUseCase;
 import org.fiap.updown.application.port.driver.EventPublisher;
 import org.fiap.updown.application.port.driver.JobPersistencePort;
 import org.fiap.updown.application.port.driver.VideoStorage;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 class CreateJobUseCaseImplTest {
 
     @Mock
-    private AppUserPersistencePort appUserPort;
+    private GetAppUserByUsernameUseCase getAppUserByUsernameUseCase;
     @Mock
     private JobPersistencePort jobPort;
     @Mock
@@ -46,20 +46,22 @@ class CreateJobUseCaseImplTest {
 
     @Test
     void deveCriarJobComSucesso() {
+        String username = "usuario.teste";
         UUID userId = UUID.randomUUID();
         InputStream videoData = new ByteArrayInputStream("video data".getBytes());
-        CreateJobCommand command = new CreateJobCommand(userId, "video.mp4", "video/mp4", videoData);
+        CreateJobCommand command = new CreateJobCommand(username, "video.mp4", "video/mp4", videoData);
 
         AppUser owner = new AppUser();
         owner.setId(userId);
         owner.setEmail("dono.job@teste.com");
+        owner.setUsername(username);
 
         String s3Path = "s3://videos/input/some-path/video.mp4";
 
         Job jobCriadoPeloServico = Job.builder().user(owner).sourceObject(s3Path).build();
         Job jobSalvo = Job.builder().id(UUID.randomUUID()).user(owner).sourceObject(s3Path).build();
 
-        when(appUserPort.findById(userId)).thenReturn(Optional.of(owner));
+        when(getAppUserByUsernameUseCase.execute(username)).thenReturn(owner);
         when(videoStorage.store(userId, "video.mp4", "video/mp4", videoData)).thenReturn(s3Path);
         when(jobService.createJob(owner, s3Path)).thenReturn(jobCriadoPeloServico);
         when(jobPort.save(jobCriadoPeloServico)).thenReturn(jobSalvo);
@@ -73,7 +75,7 @@ class CreateJobUseCaseImplTest {
         assertThat(result.getSourceObject()).isEqualTo(s3Path);
         assertThat(result.getUser()).isEqualTo(owner);
 
-        verify(appUserPort, times(1)).findById(userId);
+        verify(getAppUserByUsernameUseCase, times(1)).execute(username);
         verify(videoStorage, times(1)).store(userId, "video.mp4", "video/mp4", videoData);
         verify(jobService, times(1)).createJob(owner, s3Path);
         verify(jobPort, times(1)).save(jobCriadoPeloServico);
@@ -82,14 +84,14 @@ class CreateJobUseCaseImplTest {
 
     @Test
     void deveLancarExcecao_QuandoUsuarioNaoForEncontrado() {
-        UUID userId = UUID.randomUUID();
-        CreateJobCommand command = new CreateJobCommand(userId, "video.mp4", "video/mp4", null);
+        String username = "usuario.inexistente";
+        CreateJobCommand command = new CreateJobCommand(username, "video.mp4", "video/mp4", null);
 
-        when(appUserPort.findById(userId)).thenReturn(Optional.empty());
+        when(getAppUserByUsernameUseCase.execute(username)).thenThrow(new RecursoNaoEncontradoException("Usuário não encontrado com username: " + username));
 
         assertThatThrownBy(() -> createJobUseCase.execute(command))
                 .isInstanceOf(RecursoNaoEncontradoException.class)
-                .hasMessage("Usuário não encontrado: " + userId);
+                .hasMessage("Usuário não encontrado com username: " + username);
 
         verify(videoStorage, never()).store(any(), anyString(), anyString(), any());
         verify(jobPort, never()).save(any());
@@ -97,14 +99,16 @@ class CreateJobUseCaseImplTest {
 
     @Test
     void deveLancarExcecao_QuandoFalharAoArmazenarVideo() {
+        String username = "usuario.teste";
         UUID userId = UUID.randomUUID();
         InputStream videoData = new ByteArrayInputStream("video data".getBytes());
-        CreateJobCommand command = new CreateJobCommand(userId, "video.mp4", "video/mp4", videoData);
+        CreateJobCommand command = new CreateJobCommand(username, "video.mp4", "video/mp4", videoData);
 
         AppUser owner = new AppUser();
         owner.setId(userId);
+        owner.setUsername(username);
 
-        when(appUserPort.findById(userId)).thenReturn(Optional.of(owner));
+        when(getAppUserByUsernameUseCase.execute(username)).thenReturn(owner);
         when(videoStorage.store(userId, "video.mp4", "video/mp4", videoData))
                 .thenThrow(new RuntimeException("Erro no S3"));
 

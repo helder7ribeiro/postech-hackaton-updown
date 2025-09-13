@@ -50,12 +50,22 @@ class JobRestAdapterIntegrationTest extends AbstractIntegrationTest {
     private AppUserEntity testUser;
     private JobEntity testJob;
 
+    private String createMockJwtToken(String username) {
+        String header = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9";
+        String payload = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImNvZ25pdG86dXNlcm5hbWUiOiI" + username + "In0";
+        String signature = "signature";
+        return header + "." + payload + "." + signature;
+    }
+
     @BeforeEach
     void setUp() {
         jobRepository.deleteAll();
         appUserRepository.deleteAll();
 
-        testUser = appUserRepository.save(AppUserEntity.builder().email("usuario.job.api@teste.com").build());
+        testUser = appUserRepository.save(AppUserEntity.builder()
+                .email("usuario.job.api@teste.com")
+                .username("usuario.job.api")
+                .build());
         testJob = jobRepository.save(JobEntity.builder()
                 .user(testUser)
                 .sourceObject("s3://bucket/test/video.mp4")
@@ -66,15 +76,14 @@ class JobRestAdapterIntegrationTest extends AbstractIntegrationTest {
     @Test
     void deveCriarJobComSucesso() throws Exception {
         // Arrange
-        String payloadJson = String.format("{\"userId\":\"%s\"}", testUser.getId());
-        MockMultipartFile payload = new MockMultipartFile("payload", "", "application/json", payloadJson.getBytes());
         MockMultipartFile video = new MockMultipartFile("video", "video.mp4", "video/mp4", "videocontent".getBytes());
+        String mockJwtToken = createMockJwtToken(testUser.getUsername());
 
         when(videoStorage.store(any(), any(), any(), any())).thenReturn("s3://mocked-path/video.mp4");
 
         mockMvc.perform(multipart("/api/v1/jobs")
                         .file(video)
-                        .file(payload))
+                        .header("Authorization", "Bearer " + mockJwtToken))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("X-updown-alert"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
@@ -84,7 +93,10 @@ class JobRestAdapterIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void deveBuscarJobPorId() throws Exception {
-        mockMvc.perform(get("/api/v1/jobs/{id}", testJob.getId()))
+        String mockJwtToken = createMockJwtToken(testUser.getUsername());
+        
+        mockMvc.perform(get("/api/v1/jobs/{id}", testJob.getId())
+                        .header("Authorization", "Bearer " + mockJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(testJob.getId().toString()))
                 .andExpect(jsonPath("$.sourceObject").value("s3://bucket/test/video.mp4"))
@@ -94,10 +106,12 @@ class JobRestAdapterIntegrationTest extends AbstractIntegrationTest {
     @Test
     void deveAtualizarJob() throws Exception {
         UpdateJobRequest request = new UpdateJobRequest(JobStatus.COMPLETED, "s3://bucket/output/video.mp4", null);
+        String mockJwtToken = createMockJwtToken(testUser.getUsername());
 
         mockMvc.perform(put("/api/v1/jobs/{id}", testJob.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request))
+                        .header("Authorization", "Bearer " + mockJwtToken))
                 .andExpect(header().exists("X-updown-alert"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
@@ -109,7 +123,10 @@ class JobRestAdapterIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void deveDeletarJob() throws Exception {
-        mockMvc.perform(delete("/api/v1/jobs/{id}", testJob.getId()))
+        String mockJwtToken = createMockJwtToken(testUser.getUsername());
+        
+        mockMvc.perform(delete("/api/v1/jobs/{id}", testJob.getId())
+                        .header("Authorization", "Bearer " + mockJwtToken))
                 .andExpect(status().isNoContent())
                 .andExpect(header().exists("X-updown-alert"));
 
@@ -118,7 +135,10 @@ class JobRestAdapterIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void deveVerificarSeJobExiste() throws Exception {
-        mockMvc.perform(get("/api/v1/jobs/exists/{id}", testJob.getId()))
+        String mockJwtToken = createMockJwtToken(testUser.getUsername());
+        
+        mockMvc.perform(get("/api/v1/jobs/exists/{id}", testJob.getId())
+                        .header("Authorization", "Bearer " + mockJwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(testJob.getId().toString()))
                 .andExpect(jsonPath("$.exists").value(true));

@@ -2,10 +2,9 @@
 package org.fiap.updown.domain;
 
 import java.io.InputStream;
-import java.util.UUID;
 
 public record CreateJobCommand(
-        UUID userId,
+        String username,
         String originalFilename,
         String contentType,
         InputStream data

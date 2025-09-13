@@ -9,8 +9,8 @@ import org.fiap.updown.domain.CreateJobCommand;
 import org.fiap.updown.domain.exception.FalhaInfraestruturaException;
 import org.fiap.updown.domain.model.Job;
 import org.fiap.updown.infrastructure.adapter.HeaderUtil;
+import org.fiap.updown.infrastructure.adapter.rest.util.JwtUtils;
 import org.fiap.updown.infrastructure.adapter.persistence.entity.JobEntity;
-import org.fiap.updown.infrastructure.adapter.rest.job.dto.CreateJobRequest;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.JobExistsByIdResponse;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.JobResponse;
 import org.fiap.updown.infrastructure.adapter.rest.job.dto.UpdateJobRequest;
@@ -20,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -41,6 +42,7 @@ public class JobRestAdapter {
     private final ExistsJobByIdUseCase existsByIdUseCase;
 
     private final JobRestMapper mapper;
+    private final JwtUtils jwtUtils;
 
     @Value("${spring.application.name}")
     private String applicationName;
@@ -53,13 +55,16 @@ public class JobRestAdapter {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Cria um Job recebendo um arquivo de vídeo (multipart/form-data)")
     public ResponseEntity<JobResponse> create(
-            @RequestPart("payload") @Valid CreateJobRequest request,
-            @RequestPart("video") MultipartFile video) {
+            @RequestPart("video") MultipartFile video,
+            HttpServletRequest httpRequest) {
 
         try {
+            // Extrai username do JWT
+            String username = jwtUtils.extractUsernameFromToken(httpRequest);
+            
             // monta command sem acoplar a frameworks no use case
             CreateJobCommand cmd = new CreateJobCommand(
-                    request.userId(),
+                    username,
                     video.getOriginalFilename(),
                     video.getContentType(),
                     video.getInputStream() // Esta linha pode lançar IOException

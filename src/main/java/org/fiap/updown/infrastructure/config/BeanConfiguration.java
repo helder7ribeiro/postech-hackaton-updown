@@ -6,6 +6,7 @@ import org.fiap.updown.application.port.driver.EventPublisher;
 import org.fiap.updown.application.port.driver.JobPersistencePort;
 import org.fiap.updown.application.port.driver.VideoStorage;
 import org.fiap.updown.application.usecase.*;
+import org.fiap.updown.application.port.driven.GetAppUserByUsernameUseCase;
 import org.fiap.updown.domain.service.JobService;
 import org.fiap.updown.domain.service.JobServiceImpl;
 import org.springframework.context.annotation.Bean;
@@ -47,13 +48,18 @@ public class BeanConfiguration {
     }
 
     @Bean
+    public GetAppUserByUsernameUseCaseImpl getAppUserByUsernameUseCase(AppUserPersistencePort appUserPersistencePort) {
+        return new GetAppUserByUsernameUseCaseImpl(appUserPersistencePort);
+    }
+
+    @Bean
     public CreateJobUseCaseImpl createJobUseCase(
-            AppUserPersistencePort appUserPort,
+            GetAppUserByUsernameUseCase getAppUserByUsernameUseCase,
             JobPersistencePort jobPort,
             EventPublisher eventPublisher,
             VideoStorage videoStorage,
             JobService jobService) {
-        return new CreateJobUseCaseImpl(appUserPort, jobPort, eventPublisher, videoStorage, jobService);
+        return new CreateJobUseCaseImpl(getAppUserByUsernameUseCase, jobPort, eventPublisher, videoStorage, jobService);
     }
 
     @Bean

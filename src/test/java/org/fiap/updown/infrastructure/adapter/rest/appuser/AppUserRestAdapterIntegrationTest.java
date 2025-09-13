@@ -42,12 +42,15 @@ class AppUserRestAdapterIntegrationTest extends AbstractIntegrationTest {
         jobRepository.deleteAll();
         appUserRepository.deleteAll();
 
-        testUser = appUserRepository.save(AppUserEntity.builder().email("usuario.existente@teste.com").build());
+        testUser = appUserRepository.save(AppUserEntity.builder()
+                .email("usuario.existente@teste.com")
+                .username("usuario.existente")
+                .build());
     }
 
     @Test
     void deveCriarUsuarioComSucesso() throws Exception {
-        CreateAppUserRequest request = new CreateAppUserRequest("novo.usuario.api@teste.com");
+        CreateAppUserRequest request = new CreateAppUserRequest("novo.usuario.api@teste.com", "novo.usuario.api");
 
         mockMvc.perform(post("/api/v1/app-users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -55,12 +58,13 @@ class AppUserRestAdapterIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("X-updown-alert"))
                 .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.email").value("novo.usuario.api@teste.com"));
+                .andExpect(jsonPath("$.email").value("novo.usuario.api@teste.com"))
+                .andExpect(jsonPath("$.username").value("novo.usuario.api"));
     }
 
     @Test
     void naoDeveCriarUsuario_QuandoEmailJaExiste() throws Exception {
-        CreateAppUserRequest request = new CreateAppUserRequest("usuario.existente@teste.com");
+        CreateAppUserRequest request = new CreateAppUserRequest("usuario.existente@teste.com", "usuario.existente");
 
         mockMvc.perform(post("/api/v1/app-users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -73,7 +77,8 @@ class AppUserRestAdapterIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/api/v1/app-users/{id}", testUser.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(testUser.getId().toString()))
-                .andExpect(jsonPath("$.email").value("usuario.existente@teste.com"));
+                .andExpect(jsonPath("$.email").value("usuario.existente@teste.com"))
+                .andExpect(jsonPath("$.username").value("usuario.existente"));
     }
 
     @Test
@@ -84,17 +89,19 @@ class AppUserRestAdapterIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void deveAtualizarUsuario() throws Exception {
-        UpdateAppUserRequest request = new UpdateAppUserRequest("email.atualizado@teste.com");
+        UpdateAppUserRequest request = new UpdateAppUserRequest("email.atualizado@teste.com", "email.atualizado");
 
         mockMvc.perform(put("/api/v1/app-users/{id}", testUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(header().exists("X-updown-alert"))
-                .andExpect(jsonPath("$.email").value("email.atualizado@teste.com"));
+                .andExpect(jsonPath("$.email").value("email.atualizado@teste.com"))
+                .andExpect(jsonPath("$.username").value("email.atualizado"));
 
         AppUserEntity updatedUser = appUserRepository.findById(testUser.getId()).orElseThrow();
         assertThat(updatedUser.getEmail()).isEqualTo("email.atualizado@teste.com");
+        assertThat(updatedUser.getUsername()).isEqualTo("email.atualizado");
     }
 
     @Test

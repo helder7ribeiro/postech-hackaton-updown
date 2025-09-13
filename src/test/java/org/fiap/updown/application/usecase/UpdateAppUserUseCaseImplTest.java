@@ -33,10 +33,12 @@ class UpdateAppUserUseCaseImplTest {
         AppUser userParaAtualizar = new AppUser();
         userParaAtualizar.setId(userId);
         userParaAtualizar.setEmail(novoEmail);
+        userParaAtualizar.setUsername("email.atualizado");
 
         AppUser usuarioExistente = new AppUser();
         usuarioExistente.setId(userId);
         usuarioExistente.setEmail("email.antigo@teste.com");
+        usuarioExistente.setUsername("email.antigo");
 
         when(appUserPersistencePort.findById(userId)).thenReturn(Optional.of(usuarioExistente));
         when(appUserPersistencePort.save(any(AppUser.class))).thenReturn(userParaAtualizar);
@@ -58,6 +60,7 @@ class UpdateAppUserUseCaseImplTest {
         AppUser userParaAtualizar = new AppUser();
         userParaAtualizar.setId(userId);
         userParaAtualizar.setEmail("email.qualquer@teste.com");
+        userParaAtualizar.setUsername("email.qualquer");
 
         when(appUserPersistencePort.findById(userId)).thenReturn(Optional.empty());
 
