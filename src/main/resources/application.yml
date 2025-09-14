@@ -4,7 +4,7 @@ app:
       bucket: videos
       inputPrefix: input
       region: us-east-1
-      endpoint: http://localhost:4566
+      endpoint: ${COGNITO_USER_POOL_ID:http://localhost:4566}
       pathStyle: true
       createBucketIfMissing: true
       accessKey: test
