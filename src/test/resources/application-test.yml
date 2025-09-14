@@ -22,3 +22,8 @@ app:
   storage:
     s3:
       bucket: videos
+
+# Desabilitar validação JWT em testes
+jwt:
+  validation:
+    enabled: false

@@ -48,6 +48,12 @@ public class AppUserPersistenceAdapter implements AppUserPersistencePort {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<AppUser> findByUsername(String username) {
+        return repository.findByUsernameIgnoreCase(username).map(mapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public boolean existsById(UUID id) {
         return repository.existsById(id);
     }
@@ -56,6 +62,12 @@ public class AppUserPersistenceAdapter implements AppUserPersistencePort {
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
         return repository.existsByEmailIgnoreCase(email);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByUsername(String username) {
+        return repository.existsByUsernameIgnoreCase(username);
     }
 
     @Override

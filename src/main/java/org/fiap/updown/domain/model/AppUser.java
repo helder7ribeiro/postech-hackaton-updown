@@ -21,4 +21,8 @@ public class AppUser {
     @Email(message = "E-mail inválido")
     @Size(max = 255, message = "E-mail deve ter no máximo 255 caracteres")
     private String email;
+
+    @NotBlank(message = "Username é obrigatório")
+    @Size(max = 100, message = "Username deve ter no máximo 100 caracteres")
+    private String username;
 }

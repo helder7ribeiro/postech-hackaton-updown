@@ -4,5 +4,6 @@ import java.util.UUID;
 
 public record AppUserResponse(
         UUID id,
-        String email
+        String email,
+        String username
 ) {}

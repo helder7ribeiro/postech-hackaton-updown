@@ -25,7 +25,6 @@ public class UpdateJobUseCaseImpl implements UpdateJobUseCase {
         Job current = jobPort.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Job não encontrado: " + id));
 
-        // aplica mudanças permitidas (status/result/error)
         if (toUpdate.getStatus() != null) current.setStatus(toUpdate.getStatus());
         if (toUpdate.getResultObject() != null) current.setResultObject(toUpdate.getResultObject());
         if (toUpdate.getErrorMsg() != null) current.setErrorMsg(toUpdate.getErrorMsg());

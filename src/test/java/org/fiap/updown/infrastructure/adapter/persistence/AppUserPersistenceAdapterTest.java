@@ -44,6 +44,7 @@ class AppUserPersistenceAdapterTest {
     void deveVerificarExistenciaDeUsuarioPorEmail() {
         AppUser newUser = new AppUser();
         newUser.setEmail("existente@teste.com");
+        newUser.setUsername("existente");
         appUserPersistenceAdapter.save(newUser);
 
         boolean existe = appUserPersistenceAdapter.existsByEmail("existente@teste.com");
@@ -57,6 +58,7 @@ class AppUserPersistenceAdapterTest {
     void deveDeletarUsuarioPorId() {
         AppUser newUser = new AppUser();
         newUser.setEmail("deletar@teste.com");
+        newUser.setUsername("deletar");
         AppUser savedUser = appUserPersistenceAdapter.save(newUser);
         UUID userId = savedUser.getId();
 

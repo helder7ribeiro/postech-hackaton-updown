@@ -44,7 +44,11 @@ public class AppUserStepDefinitions {
 
     @Dado("que já existe um usuário com e-mail {string}")
     public void que_ja_existe_um_usuario_com_email(String email) {
-        AppUserEntity user = AppUserEntity.builder().email(email).build();
+        String username = email.split("@")[0];
+        AppUserEntity user = AppUserEntity.builder()
+                .email(email)
+                .username(username)
+                .build();
         AppUserEntity savedUser = appUserRepository.save(user);
         userCache.put(email, savedUser);
     }

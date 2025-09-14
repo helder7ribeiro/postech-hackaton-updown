@@ -4,5 +4,6 @@ import java.util.UUID;
 
 public record JobUserResponse(
         UUID id,
-        String email
+        String email,
+        String username
 ) {}

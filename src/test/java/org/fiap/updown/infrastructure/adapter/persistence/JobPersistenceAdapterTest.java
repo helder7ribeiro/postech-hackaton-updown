@@ -37,6 +37,7 @@ class JobPersistenceAdapterTest {
     void setUp() {
         AppUser user = new AppUser();
         user.setEmail("usuario.job.teste@teste.com");
+        user.setUsername("usuario.job.teste");
         testUser = appUserPersistenceAdapter.save(user);
     }
 

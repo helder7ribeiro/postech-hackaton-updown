@@ -17,7 +17,8 @@ import java.util.UUID;
 @Table(
         name = "app_user",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_app_user_email", columnNames = "email")
+                @UniqueConstraint(name = "uk_app_user_email", columnNames = "email"),
+                @UniqueConstraint(name = "uk_app_user_username", columnNames = "username")
         }
 )
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -41,4 +42,9 @@ public class AppUserEntity implements Serializable {
     @Size(max = 255)
     @Column(name = "email", length = 255, nullable = false, unique = true)
     private String email;
+
+    @NotNull
+    @Size(max = 100)
+    @Column(name = "username", length = 100, nullable = false, unique = true)
+    private String username;
 }
