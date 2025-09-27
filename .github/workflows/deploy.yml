@@ -70,9 +70,9 @@ jobs:
       - name: Criar segredo do Cognito a partir dos GitHub Secrets
         run: |
           kubectl create secret generic cognito-config \
-            --from-literal=COGNITO_APP_CLIENT_ID="${{ secrets.COGNITO_APP_CLIENT_ID }}" \
+            --from-literal=COGNITO_APP_CLIENT_ID="${{ secrets.COGNITO_CLIENT_ID }}" \
             --from-literal=COGNITO_ISSUER_URI="${{ secrets.COGNITO_ISSUER_URI }}" \
-            --from-literal=COGNITO_JWK_URI="${{ secrets.COGNITO_JWK_URI }}" \
+            --from-literal=COGNITO_JWK_URI="${{ secrets.COGNITO_JWKS_URI }}" \
             --from-literal=COGNITO_REGION="${{ secrets.COGNITO_REGION }}" \
             --from-literal=COGNITO_USER_POOL_ID="${{ secrets.COGNITO_USER_POOL_ID }}" \
             -n fastfood \
