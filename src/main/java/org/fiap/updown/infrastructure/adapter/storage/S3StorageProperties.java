@@ -16,4 +16,5 @@ public class S3StorageProperties {
     private boolean createBucketIfMissing ;
     private String accessKey;
     private String secretKey;
+    private String sessionToken;
 }

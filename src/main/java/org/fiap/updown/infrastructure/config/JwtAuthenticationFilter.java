@@ -25,12 +25,17 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final String JWK_URL = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IjXtmykzZ/.well-known/jwks.json";
-    private static final String EXPECTED_CLIENT_ID = "27qrpbh2oi5cbbletblkh7b4ub";
-    private static final String EXPECTED_ISSUER = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IjXtmykzZ";
-
     @Value("${jwt.validation.enabled:true}")
     private boolean jwtValidationEnabled;
+
+    @Value("${app.cognito.jwkUrl}")
+    private String jwkUrl;
+
+    @Value("${app.cognito.clientId}")
+    private String expectedClientId;
+
+    @Value("${app.cognito.issuer}")
+    private String expectedIssuer;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -100,15 +105,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Verificar issuer
             String issuer = claims.getIssuer();
-            if (!EXPECTED_ISSUER.equals(issuer)) {
-                log.warn("Issuer inválido. Esperado: {}, Recebido: {}", EXPECTED_ISSUER, issuer);
+            if (!expectedIssuer.equals(issuer)) {
+                log.warn("Issuer inválido. Esperado: {}, Recebido: {}", expectedIssuer, issuer);
                 return false;
             }
 
             // Verificar client_id
             String clientId = claims.getStringClaim("client_id");
-            if (!EXPECTED_CLIENT_ID.equals(clientId)) {
-                log.warn("Client ID inválido. Esperado: {}, Recebido: {}", EXPECTED_CLIENT_ID, clientId);
+            if (!expectedClientId.equals(clientId)) {
+                log.warn("Client ID inválido. Esperado: {}, Recebido: {}", expectedClientId, clientId);
                 return false;
             }
 
@@ -120,7 +125,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // Verificar assinatura
-            JWKSet jwkSet = JWKSet.load(new URL(JWK_URL));
+            JWKSet jwkSet = JWKSet.load(new URL(jwkUrl));
             
             // Obter a chave pelo kid do header
             String kid = signedJWT.getHeader().getKeyID();
