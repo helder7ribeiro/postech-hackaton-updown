@@ -1,25 +1,27 @@
 app:
   storage:
     s3:
-      bucket: videos
+      bucket: videos-hacka-bucket
       inputPrefix: input
       region: us-east-1
-      endpoint: http://localhost:4566
       pathStyle: true
       createBucketIfMissing: true
-      accessKey: test
-      secretKey: test
+      accessKey: ${AWS_ACCESS_KEY_ID}
+      secretKey: ${AWS_SECRET_ACCESS_KEY}
+      sessionToken: ${AWS_SESSION_TOKEN}
   messaging:
     sqs:
       queueName: jobs-events.fifo
       region: us-east-1
-      endpoint: http://localhost:4566
       createQueueIfMissing: true
       fifo: true
       contentBasedDeduplication: true
       defaultDelaySeconds: 0
       messageGroupStrategy: user
       staticMessageGroupId: jobs
+      accessKey: ${AWS_ACCESS_KEY_ID:test}
+      secretKey: ${AWS_SECRET_ACCESS_KEY:test}
+      sessionToken: ${AWS_SESSION_TOKEN}
       consumer:
         queueName: jobs-ready     # ou defina queueUrl diretamente
         region: us-east-1
@@ -31,10 +33,20 @@ app:
         pollIntervalMillis: 1000
         concurrency: 4
   cognito:
-    userPoolId: ${COGNITO_USER_POOL_ID:us-east-1_IjXtmykzZ}
-    clientId: ${COGNITO_CLIENT_ID:27qrpbh2oi5cbbletblkh7b4ub}
+    userPoolId: ${COGNITO_USER_POOL_ID}
+    clientId: ${COGNITO_CLIENT_ID}
     region: ${COGNITO_REGION:us-east-1}
-    jwkUrl: ${COGNITO_JWK_URL:https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IjXtmykzZ/.well-known/jwks.json}
+    jwkUrl: ${COGNITO_JWKS_URI}
+    issuer: ${COGNITO_ISSUER_URI}
+
+#jwt:
+#  validation:
+#    enabled: ${JWT_VALIDATION_ENABLED:true}
+#  jwk:
+#    url: ${JWT_JWK_URL}
+#  client:
+#    id: ${JWT_CLIENT_ID}
+#  issuer: ${JWT_ISSUER}
 
 spring:
   profiles:
@@ -52,9 +64,9 @@ spring:
   config:
     import: optional:file:.env-dev[.properties]
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/updown}
-    username: ${SPRING_DATASOURCE_USERNAME:updown_user}
-    password: ${SPRING_DATASOURCE_PASSWORD:updown_password}
+    url: ${POSTGRES_DATASOURCE_URL:jdbc:postgresql://localhost:5432/updown}
+    username: ${POSTGRES_USER:updown_user}
+    password: ${POSTGRES_PASSWORD:updown_password}
   flyway:
     enabled: true
     locations: classpath:db/migration

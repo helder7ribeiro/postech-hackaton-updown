@@ -31,9 +31,10 @@ public class SqsMessagingProperties {
     /** Habilita deduplicação por conteúdo ao criar fila FIFO */
     private boolean contentBasedDeduplication = true;
 
-    /** Credenciais fake p/ LocalStack */
-    private String accessKey = "test";
-    private String secretKey = "test";
+    /** Credenciais */
+    private String accessKey;
+    private String secretKey;
+    private String sessionToken;
 
     /** Opcional: delay padrão para mensagens (0-900) */
     private Integer defaultDelaySeconds = 0;

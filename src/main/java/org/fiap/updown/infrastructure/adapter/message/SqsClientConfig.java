@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -26,7 +27,7 @@ public class SqsClientConfig {
         SqsClientBuilder builder = SqsClient.builder()
                 .region(Region.of(props.getRegion()))
                 .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(props.getAccessKey(), props.getSecretKey())));
+                        AwsSessionCredentials.create(props.getAccessKey(), props.getSecretKey(), props.getSessionToken())));
 
         if (props.getEndpoint() != null && !props.getEndpoint().isBlank()) {
             builder = builder.endpointOverride(URI.create(props.getEndpoint()));
