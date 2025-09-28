@@ -56,9 +56,6 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name eks-cluster --region us-east-1
 
-      - name: Deploy namespace
-        run: kubectl apply -f k8s/namespace.yml
-
       - name: Criar secrets do banco
         run: |
           kubectl create secret generic db-credentials-pedido \
@@ -66,7 +63,7 @@ jobs:
             --from-literal=POSTGRES_PASSWORD="${{ secrets.DB_PASSWORD }}" \
             --from-literal=POSTGRES_DB="${{ secrets.DB_NAME }}" \
             --from-literal=SPRING_DATASOURCE_URL="${{ secrets.SPRING_DATASOURCE_URL }}" \
-            -n fastfood \
+            -n framegenerator \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Criar secret AWS
@@ -76,7 +73,7 @@ jobs:
             --from-literal=AWS_SECRET_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
             --from-literal=AWS_SESSION_TOKEN="${{ secrets.AWS_SESSION_TOKEN }}" \
             --from-literal=AWS_REGION="${{ secrets.AWS_REGION }}" \
-            -n fastfood \
+            -n framegenerator \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Criar segredo do Cognito a partir dos GitHub Secrets
@@ -87,7 +84,7 @@ jobs:
             --from-literal=COGNITO_JWK_URI="${{ secrets.COGNITO_JWKS_URI }}" \
             --from-literal=COGNITO_REGION="${{ secrets.COGNITO_REGION }}" \
             --from-literal=COGNITO_USER_POOL_ID="${{ secrets.COGNITO_USER_POOL_ID }}" \
-            -n fastfood \
+            -n framegenerator \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Substituir variáveis no deployment
@@ -100,8 +97,8 @@ jobs:
 
       - name: Verificar rollout
         run: |
-          kubectl rollout status deployment/${{ env.APP_NAME }}-deployment -n fastfood
+          kubectl rollout status deployment/${{ env.APP_NAME }}-deployment -n framegenerator
 
       - name: Verificar serviço
         run: |
-          kubectl get svc ${{ env.APP_NAME }}-app -n fastfood || true
+          kubectl get svc ${{ env.APP_NAME }}-app -n framegenerator || true
