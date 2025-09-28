@@ -20,6 +20,16 @@ app:
       defaultDelaySeconds: 0
       messageGroupStrategy: user
       staticMessageGroupId: jobs
+      consumer:
+        queueName: jobs-ready     # ou defina queueUrl diretamente
+        region: us-east-1
+        endpoint: http://localhost:4566
+        maxMessages: 10
+        waitTimeSeconds: 10
+        visibilityTimeoutSeconds: 60    # aplica ao receive (opcional)
+        extendVisibilitySeconds: 120    # estende periodicamente durante o processamento (0=desabilita)
+        pollIntervalMillis: 1000
+        concurrency: 4
   cognito:
     userPoolId: ${COGNITO_USER_POOL_ID:us-east-1_IjXtmykzZ}
     clientId: ${COGNITO_CLIENT_ID:27qrpbh2oi5cbbletblkh7b4ub}
@@ -36,6 +46,9 @@ spring:
       file-size-threshold: 5MB  # acima disso, grava em disco (não só memória)
   application:
     name: updown
+  docker:
+    compose:
+      file: ./run/docker-compose.yml
   config:
     import: optional:file:.env-dev[.properties]
   datasource:

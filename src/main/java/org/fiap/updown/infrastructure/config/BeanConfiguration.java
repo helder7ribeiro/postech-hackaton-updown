@@ -1,6 +1,7 @@
 package org.fiap.updown.infrastructure.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.fiap.updown.application.port.driven.DownloadZipUseCase;
 import org.fiap.updown.application.port.driver.AppUserPersistencePort;
 import org.fiap.updown.application.port.driver.EventPublisher;
 import org.fiap.updown.application.port.driver.JobPersistencePort;
@@ -80,6 +81,11 @@ public class BeanConfiguration {
     @Bean
     public ExistsJobByIdUseCaseImpl existsJobByIdUseCase(JobPersistencePort jobPersistencePort) {
         return new ExistsJobByIdUseCaseImpl(jobPersistencePort);
+    }
+
+    @Bean
+    public DownloadZipUseCase downloadZipUseCase(VideoStorage videoStorage) {
+        return new DownloadZipUseCaseImpl(videoStorage);
     }
 
     @Bean

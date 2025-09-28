@@ -8,9 +8,11 @@ import org.fiap.updown.domain.exception.FalhaInfraestruturaException;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -122,5 +124,22 @@ public class VideoStorageS3Adapter implements VideoStorage {
     private String shortUuid(UUID u) {
         // só pra compor uma pasta curta (opcional)
         return u.toString().substring(0, 8);
+    }
+
+    @Override
+    public byte[] download(String s3Url) throws IOException {
+        String bucket = s3Url.split("/")[2];
+        String key = s3Url.substring(s3Url.indexOf(bucket) + bucket.length() + 1);
+
+        var getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        try (InputStream s3Stream = s3.getObject(getObjectRequest);
+             ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+            s3Stream.transferTo(buffer);
+            return buffer.toByteArray();
+        }
     }
 }

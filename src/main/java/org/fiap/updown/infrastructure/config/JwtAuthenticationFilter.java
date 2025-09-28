@@ -25,9 +25,9 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final String JWK_URL = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IjXtmykzZ/.well-known/jwks.json";
-    private static final String EXPECTED_CLIENT_ID = "27qrpbh2oi5cbbletblkh7b4ub";
-    private static final String EXPECTED_ISSUER = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IjXtmykzZ";
+    private static final String JWK_URL = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_pfsBw8dhx/.well-known/jwks.json";
+    private static final String EXPECTED_CLIENT_ID = "7b4qi4d1ftr73n0ucmbechdaou";
+    private static final String EXPECTED_ISSUER = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_pfsBw8dhx";
 
     @Value("${jwt.validation.enabled:true}")
     private boolean jwtValidationEnabled;
