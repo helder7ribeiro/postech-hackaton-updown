@@ -41,6 +41,18 @@ jobs:
       - name: Testar autenticação AWS com sts get-caller-identity
         run: aws sts get-caller-identity
 
+      - name: Debug STS and env
+        run: |
+          aws sts get-caller-identity
+          aws configure list
+          curl -s https://ifconfig.me || curl -s https://api.ipify.org
+          aws --version
+
+      - name: Debug EKS call with --debug
+        run: aws eks describe-cluster --name eks-cluster --region us-east-1 --debug | head -n 200
+        continue-on-error: true
+
+
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name eks-cluster --region us-east-1
 
