@@ -23,7 +23,7 @@ app:
       secretKey: ${AWS_SECRET_ACCESS_KEY:test}
       sessionToken: ${AWS_SESSION_TOKEN}
       consumer:
-        queueName: jobs-ready     # ou defina queueUrl diretamente
+        queueName: jobs-ready.fifo     # ou defina queueUrl diretamente
         region: us-east-1
         endpoint: http://localhost:4566
         maxMessages: 10
