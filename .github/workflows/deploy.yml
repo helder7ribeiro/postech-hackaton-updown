@@ -58,7 +58,7 @@ jobs:
 
       - name: Criar secrets do banco
         run: |
-          kubectl create secret generic db-credentials-pedido \
+          kubectl create secret generic db-credentials \
             --from-literal=POSTGRES_USER="${{ secrets.DB_USERNAME }}" \
             --from-literal=POSTGRES_PASSWORD="${{ secrets.DB_PASSWORD }}" \
             --from-literal=POSTGRES_DB="${{ secrets.DB_NAME }}" \
