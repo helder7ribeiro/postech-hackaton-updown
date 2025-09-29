@@ -101,8 +101,7 @@ public class SqsJobEventsAdapter {
 
         try {
             String receipt = m.receiptHandle();
-            JsonNode json = objectMapper.readTree(m.body());
-            body = json.get("Message").asText();
+            body = m.body();
 
             Job job = objectMapper.readValue(body, Job.class);
 

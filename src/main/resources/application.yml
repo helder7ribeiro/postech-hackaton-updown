@@ -25,7 +25,6 @@ app:
       consumer:
         queueName: jobs-ready.fifo     # ou defina queueUrl diretamente
         region: us-east-1
-        endpoint: http://localhost:4566
         maxMessages: 10
         waitTimeSeconds: 10
         visibilityTimeoutSeconds: 60    # aplica ao receive (opcional)
