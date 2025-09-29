@@ -19,8 +19,8 @@ app:
       defaultDelaySeconds: 0
       messageGroupStrategy: user
       staticMessageGroupId: jobs
-      accessKey: ${AWS_ACCESS_KEY_ID:test}
-      secretKey: ${AWS_SECRET_ACCESS_KEY:test}
+      accessKey: ${AWS_ACCESS_KEY_ID}
+      secretKey: ${AWS_SECRET_ACCESS_KEY}
       sessionToken: ${AWS_SESSION_TOKEN}
       consumer:
         queueName: jobs-ready.fifo     # ou defina queueUrl diretamente

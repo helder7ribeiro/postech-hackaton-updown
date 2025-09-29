@@ -39,7 +39,6 @@ public class CreateJobUseCaseImpl implements CreateJobUseCase {
         Job saved = jobPort.save(jobCompleto);
         saved.setUser(owner);
         eventPublisher.novoVideoRecebido(saved);
-        saved.setUser(owner);
 
         return saved;
     }
