@@ -1,0 +1,104 @@
+name: CD - Deploy no EKS
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: true
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'App name'
+        required: true
+        default: updown
+
+jobs:
+  deploy-on-eks:
+    if: github.ref == 'refs/heads/main' || 'refs/heads/deploy'
+    runs-on: ubuntu-latest
+    env:
+      APP_NAME: ${{ inputs.app_name != '' && inputs.app_name || github.event.inputs.app_name }}
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Testar autenticação AWS com sts get-caller-identity
+        run: aws sts get-caller-identity
+
+      - name: Debug STS and env
+        run: |
+          aws sts get-caller-identity
+          aws configure list
+          curl -s https://ifconfig.me || curl -s https://api.ipify.org
+          aws --version
+
+      - name: Debug EKS call with --debug
+        run: aws eks describe-cluster --name eks-cluster --region us-east-1 --debug | head -n 200
+        continue-on-error: true
+
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name eks-cluster --region us-east-1
+
+      - name: Criar secrets do banco
+        run: |
+          kubectl create secret generic db-credentials \
+            --from-literal=POSTGRES_USER="${{ secrets.DB_USERNAME }}" \
+            --from-literal=POSTGRES_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            --from-literal=POSTGRES_DB="${{ secrets.DB_NAME }}" \
+            --from-literal=POSTGRES_DATASOURCE_URL="${{ secrets.SPRING_DATASOURCE_URL }}" \
+            -n framegenerator \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Criar secret AWS
+        run: |
+          kubectl create secret generic aws-credentials \
+            --from-literal=AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
+            --from-literal=AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+            --from-literal=AWS_SESSION_TOKEN="${{ secrets.AWS_SESSION_TOKEN }}" \
+            --from-literal=AWS_REGION="${{ secrets.AWS_REGION }}" \
+            -n framegenerator \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Criar segredo do Cognito a partir dos GitHub Secrets
+        run: |
+          kubectl create secret generic cognito-config \
+            --from-literal=COGNITO_CLIENT_ID="${{ secrets.COGNITO_CLIENT_ID }}" \
+            --from-literal=COGNITO_ISSUER_URI="${{ secrets.COGNITO_ISSUER_URI }}" \
+            --from-literal=COGNITO_JWKS_URI="${{ secrets.COGNITO_JWKS_URI }}" \
+            --from-literal=COGNITO_REGION="${{ secrets.COGNITO_REGION }}" \
+            --from-literal=COGNITO_USER_POOL_ID="${{ secrets.COGNITO_USER_POOL_ID }}" \
+            -n framegenerator \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Substituir variáveis no deployment
+        run: |
+          sed -i "s|\${DOCKER_USERNAME}|${{ secrets.DOCKER_USERNAME }}|g" k8s/app-deployment.yml
+          sed -i "s|\${APP_NAME}|${{ env.APP_NAME }}|g" k8s/app-deployment.yml
+
+      - name: Aplicar deployment
+        run: kubectl apply -f k8s
+
+      - name: Verificar rollout
+        run: |
+          kubectl rollout status deployment/${{ env.APP_NAME }}-deployment -n framegenerator
+
+      - name: Verificar serviço
+        run: |
+          kubectl get svc ${{ env.APP_NAME }}-app -n framegenerator || true
