@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: updown-config
+  namespace: framegenerator
+data:
+  PROFILE: 'DEV'

@@ -1,0 +1,84 @@
+app:
+  storage:
+    s3:
+      bucket: videos-hacka-bucket
+      inputPrefix: input
+      region: us-east-1
+      pathStyle: true
+      createBucketIfMissing: true
+      accessKey: ${AWS_ACCESS_KEY_ID}
+      secretKey: ${AWS_SECRET_ACCESS_KEY}
+      sessionToken: ${AWS_SESSION_TOKEN}
+  messaging:
+    sqs:
+      queueName: jobs-events.fifo
+      region: us-east-1
+      createQueueIfMissing: true
+      fifo: true
+      contentBasedDeduplication: true
+      defaultDelaySeconds: 0
+      messageGroupStrategy: user
+      staticMessageGroupId: jobs
+      accessKey: ${AWS_ACCESS_KEY_ID}
+      secretKey: ${AWS_SECRET_ACCESS_KEY}
+      sessionToken: ${AWS_SESSION_TOKEN}
+      consumer:
+        queueName: jobs-ready.fifo     # ou defina queueUrl diretamente
+        region: us-east-1
+        maxMessages: 10
+        waitTimeSeconds: 10
+        visibilityTimeoutSeconds: 60    # aplica ao receive (opcional)
+        extendVisibilitySeconds: 120    # estende periodicamente durante o processamento (0=desabilita)
+        pollIntervalMillis: 1000
+        concurrency: 4
+  cognito:
+    userPoolId: ${COGNITO_USER_POOL_ID}
+    clientId: ${COGNITO_CLIENT_ID}
+    region: ${COGNITO_REGION:us-east-1}
+    jwkUrl: ${COGNITO_JWKS_URI}
+    issuer: ${COGNITO_ISSUER_URI}
+
+#jwt:
+#  validation:
+#    enabled: ${JWT_VALIDATION_ENABLED:true}
+#  jwk:
+#    url: ${JWT_JWK_URL}
+#  client:
+#    id: ${JWT_CLIENT_ID}
+#  issuer: ${JWT_ISSUER}
+
+spring:
+  profiles:
+    active: ${PROFILE:DEV}
+  servlet:
+    multipart:
+      max-file-size: 10MB       # tamanho máximo de UM arquivo
+      max-request-size: 10MB   # soma de todos os arquivos + campos do form
+      file-size-threshold: 5MB  # acima disso, grava em disco (não só memória)
+  application:
+    name: updown
+  docker:
+    compose:
+      file: ./run/docker-compose.yml
+  config:
+    import: optional:file:.env-dev[.properties]
+  datasource:
+    url: ${POSTGRES_DATASOURCE_URL:jdbc:postgresql://localhost:5432/updown}
+    username: ${POSTGRES_USER:updown_user}
+    password: ${POSTGRES_PASSWORD:updown_password}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: none # Flyway gerencia
+    show-sql: true
+  springdoc:
+    api-docs:
+      path: /api-docs
+    swagger-ui:
+      path: /swagger
+      use-root-path: true
+server:
+  jetty:
+    max-http-form-post-size: 10MB

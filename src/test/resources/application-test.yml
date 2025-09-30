@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: updown
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=TIMESTAMPTZ
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        globally_quoted_identifiers: false
+  flyway:
+    enabled: false
+
+# Configuração do bucket para os testes de integração com o S3
+app:
+  storage:
+    s3:
+      bucket: videos
+
+# Desabilitar validação JWT em testes
+jwt:
+  validation:
+    enabled: false
