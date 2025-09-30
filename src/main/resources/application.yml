@@ -19,9 +19,18 @@ app:
       defaultDelaySeconds: 0
       messageGroupStrategy: user
       staticMessageGroupId: jobs
-      accessKey: ${AWS_ACCESS_KEY_ID:test}
-      secretKey: ${AWS_SECRET_ACCESS_KEY:test}
+      accessKey: ${AWS_ACCESS_KEY_ID}
+      secretKey: ${AWS_SECRET_ACCESS_KEY}
       sessionToken: ${AWS_SESSION_TOKEN}
+      consumer:
+        queueName: jobs-ready.fifo     # ou defina queueUrl diretamente
+        region: us-east-1
+        maxMessages: 10
+        waitTimeSeconds: 10
+        visibilityTimeoutSeconds: 60    # aplica ao receive (opcional)
+        extendVisibilitySeconds: 120    # estende periodicamente durante o processamento (0=desabilita)
+        pollIntervalMillis: 1000
+        concurrency: 4
   cognito:
     userPoolId: ${COGNITO_USER_POOL_ID}
     clientId: ${COGNITO_CLIENT_ID}
@@ -48,6 +57,9 @@ spring:
       file-size-threshold: 5MB  # acima disso, grava em disco (não só memória)
   application:
     name: updown
+  docker:
+    compose:
+      file: ./run/docker-compose.yml
   config:
     import: optional:file:.env-dev[.properties]
   datasource:

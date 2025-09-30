@@ -40,6 +40,7 @@ public class JobRestAdapter {
     private final UpdateJobUseCase updateUseCase;
     private final DeleteJobUseCase deleteUseCase;
     private final ExistsJobByIdUseCase existsByIdUseCase;
+    private final DownloadZipUseCase downloadZipUseCase;
 
     private final JobRestMapper mapper;
     private final JwtUtils jwtUtils;
@@ -132,5 +133,19 @@ public class JobRestAdapter {
     public ResponseEntity<JobExistsByIdResponse> existsById(@PathVariable("id") UUID id) {
         boolean exists = existsByIdUseCase.execute(id);
         return ResponseEntity.ok(new JobExistsByIdResponse(id, exists));
+    }
+
+    // ------------------------------------------------------------------------------------
+    // DOWNLOAD ZIP
+    // ------------------------------------------------------------------------------------
+    @GetMapping("/download-zip")
+    @Operation(summary = "Verifica se existe Job por id")
+    public ResponseEntity<byte[]> existsById(@RequestParam("s3Path") String s3Path) throws IOException {
+        byte[] bytes = downloadZipUseCase.execute(s3Path);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"frames.zip\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(bytes);
     }
 }
