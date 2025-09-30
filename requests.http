@@ -14,3 +14,21 @@ Content-Type: video/mp4
 
 < ./sample/SampleVideo_1280x720_1mb.mp4
 ------MyBoundary123--
+
+### Create Job (multipart/form-data)
+POST https://un6e7ew54j.execute-api.us-east-1.amazonaws.com/prd/updown/api/v1/jobs
+Authorization: Bearer eyJraWQiOiJmaXlvQ20yV1Fmakg4aERCNkNVZEl3dXozZlBpbFAxMlJ2NlFUQTNxTURzPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiI3NDA4MDQwOC04MDMxLTcwYmYtNTdkOC01NTA0NDczNWZjOTIiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV9ZMUM2ZjVYZGgiLCJjbGllbnRfaWQiOiI1bmV2OGFtcmE3cDY5Z3ZqcmlmZXYwZXQ0OSIsIm9yaWdpbl9qdGkiOiIxYmY0ODdmNC1iMWIxLTQ4NDYtOTA5Yy02NjA3Njk0YTdmMTQiLCJldmVudF9pZCI6IjBiYmUyZDUyLTJkMDMtNDM2ZC1iZTIyLTJjZDE2OGZkN2Y0NCIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE3NTkwODMyNjcsImV4cCI6MTc1OTE2OTY2NywiaWF0IjoxNzU5MDgzMjY3LCJqdGkiOiJhYTQ2MTZkZi0zM2Q1LTRlNzItYmZmOC05NWFjNjM2NmJjMWEiLCJ1c2VybmFtZSI6ImFkbWluIn0.HejcoWUGfo33Lg35hK36jSKwDRmPg6QYXtmCf27UbmSEspQtZZLvntUCPh7EHFftTnBahuBoURU06DLi8zI_1J3ewfjrsdPnxPnDd8nZQ4-e_bNaagCnrKGdxPeDRG7ZBEQ6WODEB1wxeEpQ8PASXJFhHHXPbtdCarBz8YsZtOVqI8XqECDXQelNeoZXvZTZlb4NF_GWwf2hkFwhn0YBWjZae5_m9hoWIStvMpI3fTXvBdvSCBvjosfuQ5uZU3zUMoBhL0BnzS86rvw3HRPvF8Irv3P4RaQnJOJvm2r3e6pUPRCUZWdRGqOMmHrHKVn89kqyw6eFgAGDAjQlpHF_rA
+Content-Type: multipart/form-data; boundary=----MyBoundary123
+
+------MyBoundary123
+Content-Disposition: form-data; name="payload"
+Content-Type: application/json
+
+{"userId":"15a92f20-a8a7-430c-9cec-92f4a0356157"}
+------MyBoundary123
+Content-Disposition: form-data; name="video"; filename="video.mp4"
+Content-Type: video/mp4
+
+< ./sample/SampleVideo_1280x720_1mb.mp4
+------MyBoundary123--
+
